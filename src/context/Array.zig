@@ -290,4 +290,36 @@ pub const Builtins = struct {
             return context.String.init(try aw.toOwnedSlice());
         }
     };
+
+    pub const sortedByDate = struct {
+        pub const signature: Signature = .{
+            .params = &.{},
+            .ret = .any,
+        };
+        pub const docs_description =
+            \\Returns the array sorted by date (descending).
+        ;
+        pub const examples =
+            \\$site.pages().sortedByDate()
+        ;
+        pub fn call(
+            arr: Array,
+            _: Allocator,
+            _: *const context.Root,
+            args: []const Value,
+        ) context.CallError!Value {
+            const bad_arg: Value = .{ .err = "expected 0 arguments" };
+            if (args.len != 0) return bad_arg;
+
+            if (arr._items.len == 0) return Optional.Null;
+
+            std.mem.sort(Value, @constCast(arr._items), {}, struct {
+                fn sortDateDescending(_: void, lhs: Value, rhs: Value) bool {
+                    return rhs.page.date.lessThan(lhs.page.date);
+                }
+            }.sortDateDescending);
+
+            return .{ .array = arr };
+        }
+    };
 };
