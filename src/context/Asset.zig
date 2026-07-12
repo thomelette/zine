@@ -399,8 +399,40 @@ pub const Builtins = struct {
                         },
                     };
                 },
-                .build => @panic("TODO"),
+                .build => blk: {
+                    const ba = ctx._meta.build.build_assets.getPtr(
+                        asset._meta.ref,
+                    ).?;
+
+                    const path = ba.input_path;
+
+                    // std.debug.print("found {?s}\n", .{ba.install_path});
+
+                    break :blk .{
+                        path,
+                        ctx._meta.build.base_dir.readFileAllocOptions(
+                            ctx._meta.io,
+                            ba.input_path,
+                            gpa,
+                            .unlimited,
+                            .@"1",
+                            0,
+                        ) catch |err| fatal.file(ba.input_path, err),
+                    };
+                },
             };
+
+            // std.debug.print("found {s}\n", .{path});
+
+            // const prefixx = switch (asset._meta.kind) {
+            //     .page => |vid| ctx._meta.build.variants[vid].content_dir_path,
+            //     .site => ctx._meta.build.cfg.getAssetsDirPath(),
+            //     .build => "",
+            // };
+            // std.debug.print("prefix {s}\n", .{prefixx});
+            // std.debug.print("A {s}\n", .{ctx._meta.build.base_dir_path});
+            // std.debug.print("B {any}\n", .{ctx._meta.build.mode.disk.output_dir});
+            // std.debug.print("B {any}\n", .{ctx._meta.build.mode.disk.output_dir.path});
 
             log.debug("parsing ziggy file: '{s}'", .{data});
 
